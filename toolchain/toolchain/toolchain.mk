@@ -14,4 +14,4 @@ TOOLCHAIN_ADD_TOOLCHAIN_DEPENDENCY = NO
 
 $(eval $(virtual-package))
 
-toolchain: $(HOST_DIR)/usr/share/buildroot/toolchainfile.cmake
+toolchain: $(HOST_DIR)/usr/share/buildroot/toolchainfile.cmake $(HOST_DIR)/etc/meson/cross-compilation.conf

@@ -8,7 +8,7 @@ c = '@TARGET_CROSS@gcc'
 cpp = '@TARGET_CROSS@g++'
 ar = '@TARGET_CROSS@ar'
 strip = '@TARGET_CROSS@strip'
-pkgconfig = '@HOST_DIR@/bin/pkgconf'
+pkgconfig = '@HOST_DIR@/usr/bin/pkgconf'
 
 [properties]
 needs_exe_wrapper = true

@@ -25,8 +25,8 @@
 # $(HOST_DIR)/bin/python3 will not look for Meson modules in
 # $HOME/.local/lib/python3.x/site-packages
 #
-MESON		= PYTHONNOUSERSITE=y $(HOST_DIR)/bin/meson
-NINJA		= PYTHONNOUSERSITE=y $(HOST_DIR)/bin/ninja
+MESON		= PYTHONNOUSERSITE=y $(HOST_DIR)/usr/bin/meson
+NINJA		= PYTHONNOUSERSITE=y $(HOST_DIR)/usr/bin/ninja
 NINJA_OPTS	= $(if $(VERBOSE),-v) -j$(PARALLEL_JOBS)
 
 ################################################################################
@@ -46,7 +46,7 @@ NINJA_OPTS	= $(if $(VERBOSE),-v) -j$(PARALLEL_JOBS)
 define inner-meson-package
 
 $(2)_CONF_ENV		?=
-$(2)_CONF_OPTS		?=
+$(2)_CONF_OPT		?=
 $(2)_NINJA_ENV		?=
 
 #
@@ -69,8 +69,8 @@ define $(2)_CONFIGURE_CMDS
 	mkdir -p $$($$(PKG)_SRCDIR)/build
 	sed -e 's%@TARGET_CROSS@%$$(TARGET_CROSS)%g' \
 	    -e 's%@TARGET_ARCH@%$$(HOST_MESON_TARGET_CPU_FAMILY)%g' \
-	    -e 's%@TARGET_CPU@%$$(GCC_TARGET_CPU)%g' \
-	    -e 's%@TARGET_ENDIAN@%$$(call LOWERCASE,$$(BR2_ENDIAN))%g' \
+	    -e 's%@TARGET_CPU@%$$(call qstrip,$$(BR2_GCC_TARGET_CPU))%g' \
+	    -e 's%@TARGET_ENDIAN@%$$(call qstrip,$$(call LOWERCASE,$$(BR2_ENDIAN)))%g' \
 	    -e 's%@TARGET_CFLAGS@%$$(call make-comma-list,$$($(2)_CFLAGS))%g' \
 	    -e 's%@TARGET_LDFLAGS@%$$(call make-comma-list,$$($(2)_LDFLAGS))%g' \
 	    -e 's%@TARGET_CXXFLAGS@%$$(call make-comma-list,$$($(2)_CXXFLAGS))%g' \
@@ -84,10 +84,10 @@ define $(2)_CONFIGURE_CMDS
 	PATH=$$(BR_PATH) $$($$(PKG)_CONF_ENV) $$(MESON) \
 		--prefix=/usr \
 		--libdir=lib \
-		--default-library=$(if $(BR2_STATIC_LIBS),static,shared) \
+		--default-library=$(if $(BR2_PREFER_STATIC_LIB),static,shared) \
 		--buildtype=$(if $(BR2_ENABLE_DEBUG),debug,release) \
 		--cross-file=$$($$(PKG)_SRCDIR)/build/cross-compilation.conf \
-		$$($$(PKG)_CONF_OPTS) \
+		$$($$(PKG)_CONF_OPT) \
 		$$($$(PKG)_SRCDIR) $$($$(PKG)_SRCDIR)/build
 endef
 else
@@ -98,13 +98,13 @@ define $(2)_CONFIGURE_CMDS
 	mkdir -p $$($$(PKG)_SRCDIR)/build
 	$$(HOST_CONFIGURE_OPTS) \
 	$$($$(PKG)_CONF_ENV) $$(MESON) \
-		--prefix=$$(HOST_DIR) \
+		--prefix=$$(HOST_DIR)/usr \
 		--libdir=lib \
 		--sysconfdir=$$(HOST_DIR)/etc \
 		--localstatedir=$$(HOST_DIR)/var \
 		--default-library=shared \
 		--buildtype=release \
-		$$($$(PKG)_CONF_OPTS) \
+		$$($$(PKG)_CONF_OPT) \
 		$$($$(PKG)_SRCDIR) $$($$(PKG)_SRCDIR)/build
 endef
 endif
@@ -183,8 +183,8 @@ host-meson-package = $(call inner-meson-package,host-$(pkgname),$(call UPPERCASE
 # Generate a Meson cross-compilation.conf suitable for use with the
 # SDK; also install the file as a template for users to add their
 # own flags if they need to.
-define PKG_MESON_INSTALL_CROSS_CONF
-	mkdir -p $(HOST_DIR)/etc/meson
+$(HOST_DIR)/etc/meson/cross-compilation.conf:
+	mkdir -p $(@D)
 	sed -e 's%@TARGET_CROSS@%$(TARGET_CROSS)%g' \
 	    -e 's%@TARGET_ARCH@%$(HOST_MESON_TARGET_CPU_FAMILY)%g' \
 	    -e 's%@TARGET_CPU@%$(HOST_MESON_TARGET_CPU)%g' \
@@ -193,14 +193,11 @@ define PKG_MESON_INSTALL_CROSS_CONF
 	    -e 's%@TARGET_LDFLAGS@%$(call make-comma-list,$(TARGET_LDFLAGS))@PKG_TARGET_CFLAGS@%g' \
 	    -e 's%@TARGET_CXXFLAGS@%$(call make-comma-list,$(TARGET_CXXFLAGS))@PKG_TARGET_CFLAGS@%g' \
 	    -e 's%@HOST_DIR@%$(HOST_DIR)%g' \
-	    -e 's%@STAGING_DIR@%$$(STAGING_DIR)%g' \
-	    $(HOST_MESON_PKGDIR)/cross-compilation.conf.in \
+	    -e 's%@STAGING_DIR@%$(STAGING_DIR)%g' \
+	    package/meson/cross-compilation.conf.in \
 	    > $(HOST_DIR)/etc/meson/cross-compilation.conf.in
 	sed -e 's%@PKG_TARGET_CFLAGS@%%g' \
 	    -e 's%@PKG_TARGET_LDFLAGS@%%g' \
 	    -e 's%@PKG_TARGET_CXXFLAGS@%%g' \
 	    $(HOST_DIR)/etc/meson/cross-compilation.conf.in \
 	    > $(HOST_DIR)/etc/meson/cross-compilation.conf
-endef
-
-TOOLCHAIN_POST_INSTALL_STAGING_HOOKS += PKG_MESON_INSTALL_CROSS_CONF
