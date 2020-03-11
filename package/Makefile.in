@@ -218,6 +218,7 @@ STRIPCMD = $(TARGET_STRIP)
 KSTRIPCMD = $(TARGET_STRIP)
 endif
 INSTALL := $(shell which install || type -p install)
+UNZIP := $(shell which unzip || type -p unzip) -q
 FLEX := $(shell which flex || type -p flex)
 BISON := $(shell which bison || type -p bison)
 SED := $(shell which sed || type -p sed) -i -e
