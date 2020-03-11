@@ -14,7 +14,7 @@ PYTHON3_LICENSE_FILES = LICENSE
 # This host Python is installed in $(HOST_DIR), as it is needed when
 # cross-compiling third-party Python modules.
 
-HOST_PYTHON3_CONF_OPTS += \
+HOST_PYTHON3_CONF_OPT += \
 	--without-ensurepip \
 	--without-cxx-main \
 	--disable-sqlite3 \
@@ -44,7 +44,7 @@ HOST_PYTHON3_DEPENDENCIES = host-expat host-zlib host-libffi
 ifeq ($(BR2_PACKAGE_HOST_PYTHON3_SSL),y)
 HOST_PYTHON3_DEPENDENCIES += host-openssl
 else
-HOST_PYTHON3_CONF_OPTS += --disable-openssl
+HOST_PYTHON3_CONF_OPT += --disable-openssl
 endif
 
 PYTHON3_INSTALL_STAGING = YES
@@ -52,76 +52,76 @@ PYTHON3_INSTALL_STAGING = YES
 ifeq ($(BR2_PACKAGE_PYTHON3_READLINE),y)
 PYTHON3_DEPENDENCIES += readline
 else
-PYTHON3_CONF_OPTS += --disable-readline
+PYTHON3_CONF_OPT += --disable-readline
 endif
 
 ifeq ($(BR2_PACKAGE_PYTHON3_CURSES),y)
 PYTHON3_DEPENDENCIES += ncurses
 else
-PYTHON3_CONF_OPTS += --disable-curses
+PYTHON3_CONF_OPT += --disable-curses
 endif
 
 ifeq ($(BR2_PACKAGE_PYTHON3_DECIMAL),y)
 PYTHON3_DEPENDENCIES += mpdecimal
-PYTHON3_CONF_OPTS += --with-libmpdec=system
+PYTHON3_CONF_OPT += --with-libmpdec=system
 else
-PYTHON3_CONF_OPTS += --with-libmpdec=none
+PYTHON3_CONF_OPT += --with-libmpdec=none
 endif
 
 ifeq ($(BR2_PACKAGE_PYTHON3_PYEXPAT),y)
 PYTHON3_DEPENDENCIES += expat
-PYTHON3_CONF_OPTS += --with-expat=system
+PYTHON3_CONF_OPT += --with-expat=system
 else
-PYTHON3_CONF_OPTS += --with-expat=none
+PYTHON3_CONF_OPT += --with-expat=none
 endif
 
 ifeq ($(BR2_PACKAGE_PYTHON3_SQLITE),y)
 PYTHON3_DEPENDENCIES += sqlite
 else
-PYTHON3_CONF_OPTS += --disable-sqlite3
+PYTHON3_CONF_OPT += --disable-sqlite3
 endif
 
 ifeq ($(BR2_PACKAGE_PYTHON3_SSL),y)
 PYTHON3_DEPENDENCIES += openssl
 else
-PYTHON3_CONF_OPTS += --disable-openssl
+PYTHON3_CONF_OPT += --disable-openssl
 endif
 
 ifneq ($(BR2_PACKAGE_PYTHON3_CODECSCJK),y)
-PYTHON3_CONF_OPTS += --disable-codecs-cjk
+PYTHON3_CONF_OPT += --disable-codecs-cjk
 endif
 
 ifneq ($(BR2_PACKAGE_PYTHON3_UNICODEDATA),y)
-PYTHON3_CONF_OPTS += --disable-unicodedata
+PYTHON3_CONF_OPT += --disable-unicodedata
 endif
 
 # Disable auto-detection of uuid.h (util-linux)
 # which would add _uuid module support, instead
 # default to the pure python implementation
-PYTHON3_CONF_OPTS += --disable-uuid
+PYTHON3_CONF_OPT += --disable-uuid
 
 ifeq ($(BR2_PACKAGE_PYTHON3_BZIP2),y)
 PYTHON3_DEPENDENCIES += bzip2
 else
-PYTHON3_CONF_OPTS += --disable-bzip2
+PYTHON3_CONF_OPT += --disable-bzip2
 endif
 
 ifeq ($(BR2_PACKAGE_PYTHON3_XZ),y)
 PYTHON3_DEPENDENCIES += xz
 else
-PYTHON3_CONF_OPTS += --disable-xz
+PYTHON3_CONF_OPT += --disable-xz
 endif
 
 ifeq ($(BR2_PACKAGE_PYTHON3_ZLIB),y)
 PYTHON3_DEPENDENCIES += zlib
 else
-PYTHON3_CONF_OPTS += --disable-zlib
+PYTHON3_CONF_OPT += --disable-zlib
 endif
 
 ifeq ($(BR2_PACKAGE_PYTHON3_OSSAUDIODEV),y)
-PYTHON3_CONF_OPTS += --enable-ossaudiodev
+PYTHON3_CONF_OPT += --enable-ossaudiodev
 else
-PYTHON3_CONF_OPTS += --disable-ossaudiodev
+PYTHON3_CONF_OPT += --disable-ossaudiodev
 endif
 
 # Make python believe we don't have 'hg', so that it doesn't try to
@@ -146,7 +146,7 @@ ifeq ($(BR2_TOOLCHAIN_USES_UCLIBC),y)
 PYTHON3_CONF_ENV += ac_cv_func_wcsftime=no
 endif
 
-PYTHON3_CONF_OPTS += \
+PYTHON3_CONF_OPT += \
 	--without-ensurepip \
 	--without-cxx-main \
 	--with-system-ffi \
@@ -176,11 +176,11 @@ PYTHON3_CONF_OPTS += \
 #
 # Unfortunately, for the target Python, "Programs/_freeze_importlib"
 # is built for the target, while we need to run them at build time. So
-# when installing host-python3, we copy them to $(HOST_DIR)/bin...
+# when installing host-python3, we copy them to $(HOST_DIR)/usr/bin...
 #
 define HOST_PYTHON3_MAKE_REGEN_IMPORTLIB
 	$(HOST_MAKE_ENV) $(PYTHON3_CONF_ENV) $(MAKE) $(HOST_CONFIGURE_OPTS) -C $(@D) regen-importlib
-	cp $(@D)/Programs/_freeze_importlib $(HOST_DIR)/bin/python-freeze-importlib
+	cp $(@D)/Programs/_freeze_importlib $(HOST_DIR)/usr/bin/python-freeze-importlib
 endef
 
 HOST_PYTHON3_PRE_BUILD_HOOKS += HOST_PYTHON3_MAKE_REGEN_IMPORTLIB
@@ -193,7 +193,7 @@ HOST_PYTHON3_PRE_BUILD_HOOKS += HOST_PYTHON3_MAKE_REGEN_IMPORTLIB
 #
 define PYTHON3_MAKE_REGEN_IMPORTLIB
 	$(TARGET_MAKE_ENV) $(PYTHON3_CONF_ENV) $(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) Programs/_freeze_importlib
-	cp $(HOST_DIR)/bin/python-freeze-importlib $(@D)/Programs/_freeze_importlib
+	cp $(HOST_DIR)/usr/bin/python-freeze-importlib $(@D)/Programs/_freeze_importlib
 	$(TARGET_MAKE_ENV) $(PYTHON3_CONF_ENV) $(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) regen-importlib
 endef
 
@@ -245,8 +245,8 @@ endif
 # for the target.
 ifeq ($(BR2_PACKAGE_PYTHON3),y)
 define HOST_PYTHON3_INSTALL_SYMLINK
-	ln -fs python3 $(HOST_DIR)/bin/python
-	ln -fs python3-config $(HOST_DIR)/bin/python-config
+	ln -fs python3 $(HOST_DIR)/usr/bin/python
+	ln -fs python3-config $(HOST_DIR)/usr/bin/python-config
 endef
 
 HOST_PYTHON3_POST_INSTALL_HOOKS += HOST_PYTHON3_INSTALL_SYMLINK
@@ -273,7 +273,7 @@ endif
 define PYTHON3_CREATE_PYC_FILES
 	$(PYTHON3_FIX_TIME)
 	PYTHONPATH="$(PYTHON3_PATH)" \
-	cd $(TARGET_DIR) && $(HOST_DIR)/bin/python$(PYTHON3_VERSION_MAJOR) \
+	cd $(TARGET_DIR) && $(HOST_DIR)/usr/bin/python$(PYTHON3_VERSION_MAJOR) \
 		$(TOPDIR)/support/scripts/pycompile.py \
 		$(if $(BR2_REPRODUCIBLE),--force) \
 		usr/lib/python$(PYTHON3_VERSION_MAJOR)
