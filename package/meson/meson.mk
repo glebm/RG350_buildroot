@@ -14,7 +14,7 @@ HOST_MESON_DEPENDENCIES = host-ninja
 HOST_MESON_NEEDS_HOST_PYTHON = python3
 
 HOST_MESON_TARGET_ENDIAN = $(call LOWERCASE,$(BR2_ENDIAN))
-HOST_MESON_TARGET_CPU = $(GCC_TARGET_CPU)
+HOST_MESON_TARGET_CPU = $(BR2_GCC_TARGET_CPU)
 
 # https://mesonbuild.com/Reference-tables.html#cpu-families
 ifeq ($(BR2_arcle)$(BR2_arceb),y)
@@ -47,7 +47,7 @@ endif
 
 # Avoid interpreter shebang longer than 128 chars
 define HOST_MESON_SET_INTERPRETER
-	$(SED) '1s:.*:#!/usr/bin/env python3:' $(HOST_DIR)/bin/meson
+	$(SED) '1s:.*:#!/usr/bin/env python3:' $(HOST_DIR)/usr/bin/meson
 endef
 HOST_MESON_POST_INSTALL_HOOKS += HOST_MESON_SET_INTERPRETER
 
