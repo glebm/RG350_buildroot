@@ -1,4 +1,7 @@
-Add infrastructure to disable the build of certain extensions
+From 36c138c15515e80f72a570b61da324e55ae3e80c Mon Sep 17 00:00:00 2001
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Date: Wed, 22 Feb 2017 16:33:22 -0800
+Subject: [PATCH] Add infrastructure to disable the build of certain extensions
 
 Some of the extensions part of the Python core have dependencies on
 external libraries (sqlite, tk, etc.) or are relatively big and not
@@ -32,17 +35,19 @@ then extended by Thomas Petazzoni
 <thomas.petazzoni@free-electrons.com>.
 
 Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+[ Andrey Smirnov: ported to Python 3.6 ]
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
 ---
- Makefile.pre.in |    4 ++++
- configure.ac    |    2 ++
- setup.py        |    5 ++++-
- 3 files changed, 10 insertions(+), 1 deletion(-)
+ Makefile.pre.in | 6 +++++-
+ configure.ac    | 2 ++
+ setup.py        | 5 ++++-
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
-Index: b/Makefile.pre.in
-===================================================================
+diff --git a/Makefile.pre.in b/Makefile.pre.in
+index f9011c132a..e8a6bd5c03 100644
 --- a/Makefile.pre.in
 +++ b/Makefile.pre.in
-@@ -175,6 +175,8 @@
+@@ -205,6 +205,8 @@ FILEMODE=	644
  # configure script arguments
  CONFIG_ARGS=	@CONFIG_ARGS@
  
@@ -51,15 +56,15 @@ Index: b/Makefile.pre.in
  
  # Subdirectories with code
  SRCDIRS= 	@SRCDIRS@
-@@ -561,6 +563,7 @@
+@@ -605,6 +607,7 @@ sharedmods: $(BUILDPYTHON) pybuilddir.txt Modules/_math.o
  	esac; \
- 	$(RUNSHARED) CC='$(CC)' LDSHARED='$(BLDSHARED)' OPT='$(OPT)' \
+ 	echo "$(RUNSHARED) CC='$(CC)' LDSHARED='$(BLDSHARED)' OPT='$(OPT)' \
  		_TCLTK_INCLUDES='$(TCLTK_INCLUDES)' _TCLTK_LIBS='$(TCLTK_LIBS)' \
 +		DISABLED_EXTENSIONS="$(DISABLED_EXTENSIONS)" \
- 		$(PYTHON_FOR_BUILD) $(srcdir)/setup.py $$quiet build
- 
- # Build static library
-@@ -1371,7 +1374,8 @@
+ 		$(PYTHON_FOR_BUILD) $(srcdir)/setup.py $$quiet build"; \
+ 	$(RUNSHARED) CC='$(CC)' LDSHARED='$(BLDSHARED)' OPT='$(OPT)' \
+ 		_TCLTK_INCLUDES='$(TCLTK_INCLUDES)' _TCLTK_LIBS='$(TCLTK_LIBS)' \
+@@ -1601,7 +1604,8 @@ libainstall:	@DEF_MAKE_RULE@ python-config
  # Install the dynamically loadable modules
  # This goes into $(exec_prefix)
  sharedinstall: sharedmods
@@ -69,32 +74,35 @@ Index: b/Makefile.pre.in
  	   	--prefix=$(prefix) \
  		--install-scripts=$(BINDIR) \
  		--install-platlib=$(DESTSHARED) \
-Index: b/configure.ac
-===================================================================
+diff --git a/configure.ac b/configure.ac
+index ffeec102b7..7872b4dfee 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -2349,6 +2349,8 @@
+@@ -2952,6 +2952,8 @@ LIBS="$withval $LIBS"
  
- AC_PATH_TOOL([PKG_CONFIG], [pkg-config])
+ PKG_PROG_PKG_CONFIG
  
 +AC_SUBST(DISABLED_EXTENSIONS)
 +
  # Check for use of the system expat library
  AC_MSG_CHECKING(for --with-system-expat)
  AC_ARG_WITH(system_expat,
-Index: b/setup.py
-===================================================================
+diff --git a/setup.py b/setup.py
+index 20d7f35652..d3f2cc1b37 100644
 --- a/setup.py
 +++ b/setup.py
-@@ -33,7 +33,10 @@
- COMPILED_WITH_PYDEBUG = ('--with-pydebug' in sysconfig.get_config_var("CONFIG_ARGS"))
+@@ -24,7 +24,10 @@ from distutils.spawn import find_executable
+ TEST_EXTENSIONS = True
  
  # This global variable is used to hold the list of modules to be disabled.
--disabled_module_list = []
+-DISABLED_MODULE_LIST = []
 +try:
-+    disabled_module_list = sysconfig.get_config_var("DISABLED_EXTENSIONS").split(" ")
++    DISABLED_MODULE_LIST = sysconfig.get_config_var("DISABLED_EXTENSIONS").split(" ")
 +except KeyError:
-+    disabled_module_list = list()
++    DISABLED_MODULE_LIST = list()
  
- def add_dir_to_list(dirlist, dir):
-     """Add the directory 'dir' to the list 'dirlist' (after any relative
+ 
+ def get_platform():
+-- 
+2.20.1
+

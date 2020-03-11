@@ -1,22 +1,26 @@
-Add an option to disable pydoc
+From 13a8be57e79f2657c75391bfa524dc1ba4993b02 Mon Sep 17 00:00:00 2001
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Date: Wed, 22 Feb 2017 17:07:56 -0800
+Subject: [PATCH] Add an option to disable pydoc
 
 It removes 0.5 MB of data from the target plus the pydoc script
 itself.
 
 Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 Signed-off-by: Samuel Martin <s.martin49@gmail.com>
-
+[ Andrey Smirnov: ported to Python 3.6 ]
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
 ---
- Makefile.pre.in |    8 +++++++-
- configure.ac    |    5 +++++
- setup.py        |    9 +++++++--
- 3 files changed, 19 insertions(+), 3 deletions(-)
+ Makefile.pre.in | 8 +++++++-
+ configure.ac    | 6 ++++++
+ setup.py        | 9 +++++++--
+ 3 files changed, 20 insertions(+), 3 deletions(-)
 
-Index: b/Makefile.pre.in
-===================================================================
+diff --git a/Makefile.pre.in b/Makefile.pre.in
+index 3abee36f49..6fa0549a56 100644
 --- a/Makefile.pre.in
 +++ b/Makefile.pre.in
-@@ -1087,7 +1087,9 @@
+@@ -1289,7 +1289,9 @@ bininstall: altbininstall
  	-rm -f $(DESTDIR)$(BINDIR)/idle3
  	(cd $(DESTDIR)$(BINDIR); $(LN) -s idle$(VERSION) idle3)
  	-rm -f $(DESTDIR)$(BINDIR)/pydoc3
@@ -25,33 +29,33 @@ Index: b/Makefile.pre.in
 +endif
  	-rm -f $(DESTDIR)$(BINDIR)/2to3
  	(cd $(DESTDIR)$(BINDIR); $(LN) -s 2to3-$(VERSION) 2to3)
- 	-rm -f $(DESTDIR)$(BINDIR)/pyvenv
-@@ -1138,7 +1140,7 @@
+ 	if test "x$(LIPO_32BIT_FLAGS)" != "x" ; then \
+@@ -1335,7 +1337,7 @@ LIBSUBDIRS=	tkinter site-packages \
  		multiprocessing multiprocessing/dummy \
  		unittest \
- 		venv venv/scripts venv/scripts/posix \
--		curses pydoc_data $(MACHDEPS)
-+		curses $(MACHDEPS)
+ 		venv venv/scripts venv/scripts/common venv/scripts/posix \
+-		curses pydoc_data
++		curses
  
- TESTSUBDIRS = 	tkinter/test tkinter/test/test_tkinter tkinter/test/test_ttk \
- 		test test/test_asyncio \
-@@ -1182,6 +1184,10 @@
- 		test/test_importlib/import_ test/test_importlib/source \
- 		unittest/test unittest/test/testmock
+ TESTSUBDIRS=	tkinter/test tkinter/test/test_tkinter \
+ 		tkinter/test/test_ttk test \
+@@ -1414,6 +1416,10 @@ ifeq (@TEST_MODULES@,yes)
+ LIBSUBDIRS += $(TESTSUBDIRS)
+ endif
  
 +ifeq (@PYDOC@,yes)
 +LIBSUBDIRS += pydoc_data
 +endif
 +
- ifeq (@TEST_MODULES@,yes)
- LIBSUBDIRS += $(TESTSUBDIRS)
- endif
-Index: b/configure.ac
-===================================================================
+ libinstall:	build_all $(srcdir)/Modules/xxmodule.c
+ 	@for i in $(SCRIPTDIR) $(LIBDEST); \
+ 	do \
+diff --git a/configure.ac b/configure.ac
+index b820d18c7c..f53cc86d89 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -2655,6 +2655,11 @@
-       AC_CHECK_FUNCS(pthread_atfork)
+@@ -3213,6 +3213,12 @@ if test "$posix_threads" = "yes"; then
+       AC_CHECK_FUNCS(pthread_getcpuclockid)
  fi
  
 +AC_SUBST(PYDOC)
@@ -59,14 +63,15 @@ Index: b/configure.ac
 +AC_ARG_ENABLE(pydoc,
 +	AS_HELP_STRING([--disable-pydoc], [disable pydoc]),
 +	[ PYDOC="${enableval}" ], [ PYDOC=yes ])
- 
++
  AC_SUBST(TEST_MODULES)
  
-Index: b/setup.py
-===================================================================
+ AC_ARG_ENABLE(test-modules,
+diff --git a/setup.py b/setup.py
+index bb7eb44213..748c269960 100644
 --- a/setup.py
 +++ b/setup.py
-@@ -2203,6 +2203,12 @@
+@@ -2401,6 +2401,12 @@ def main():
      # turn off warnings when deprecated modules are imported
      import warnings
      warnings.filterwarnings("ignore",category=DeprecationWarning)
@@ -79,13 +84,16 @@ Index: b/setup.py
      setup(# PyPI Metadata (PEP 301)
            name = "Python",
            version = sys.version.split()[0],
-@@ -2227,8 +2233,7 @@
+@@ -2425,8 +2431,7 @@ def main():
            # If you change the scripts installed here, you also need to
            # check the PyBuildScripts command above, and change the links
            # created by the bininstall target in Makefile.pre.in
 -          scripts = ["Tools/scripts/pydoc3", "Tools/scripts/idle3",
--                     "Tools/scripts/2to3", "Tools/scripts/pyvenv"]
-+          scripts = scripts,
+-                     "Tools/scripts/2to3"]
++          scripts = scripts
          )
  
  # --install-platlib
+-- 
+2.20.1
+
