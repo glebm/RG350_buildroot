@@ -10,7 +10,7 @@ NINJA_LICENSE = Apache-2.0
 NINJA_LICENSE_FILES = COPYING
 
 define HOST_NINJA_INSTALL_CMDS
-	$(INSTALL) -m 0755 -D $(@D)/ninja $(HOST_DIR)/bin/ninja
+	$(INSTALL) -m 0755 -D $(@D)/ninja $(HOST_DIR)/usr/bin/ninja
 endef
 
 $(eval $(host-cmake-package))
