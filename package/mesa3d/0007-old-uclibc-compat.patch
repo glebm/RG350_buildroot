@@ -1,0 +1,100 @@
+From 9d4f18dc46d5cedd25a8b7ba2d0b6db1ba6a2df4 Mon Sep 17 00:00:00 2001
+From: Gleb Mazovetskiy <glex.spb@gmail.com>
+Date: Wed, 11 Mar 2020 07:57:32 +0000
+Subject: [PATCH] old uclibc compat
+
+---
+ src/compiler/nir/nir_constant_expressions.h     |  6 ++++++
+ src/compiler/nir/nir_constant_expressions.py    | 17 +++++++++++++++++
+ .../drivers/swr/rasterizer/common/os.cpp        |  2 +-
+ src/util/os_time.c                              |  2 +-
+ src/util/u_thread.h                             |  2 +-
+ 5 files changed, 26 insertions(+), 3 deletions(-)
+
+diff --git a/src/compiler/nir/nir_constant_expressions.h b/src/compiler/nir/nir_constant_expressions.h
+index 6450d5c..ca85d8c 100644
+--- a/src/compiler/nir/nir_constant_expressions.h
++++ b/src/compiler/nir/nir_constant_expressions.h
+@@ -30,6 +30,12 @@
+ 
+ #include "nir.h"
+ 
++#ifdef __UCLIBC__
++float fmaxf(float a, float b);
++float fminf(float a, float b);
++float fmaf (float x, float y, float z);
++#endif
++
+ void nir_eval_const_opcode(nir_op op, nir_const_value *dest,
+                            unsigned num_components, unsigned bit_size,
+                            nir_const_value **src,
+diff --git a/src/compiler/nir/nir_constant_expressions.py b/src/compiler/nir/nir_constant_expressions.py
+index 8b8cd5f..de91972 100644
+--- a/src/compiler/nir/nir_constant_expressions.py
++++ b/src/compiler/nir/nir_constant_expressions.py
+@@ -68,6 +68,23 @@ template = """\
+ #include "util/bigmath.h"
+ #include "nir_constant_expressions.h"
+ 
++#ifdef __UCLIBC__
++float fmaxf(float a, float b)
++{
++	return (a > b) ? a : b;
++}
++
++float fminf(float a, float b)
++{
++	return (a < b) ? a : b;
++}
++
++float fmaf (float x, float y, float z)
++{
++	return (float) fma( (double)x, (double)y, (double)z );
++}
++#endif
++
+ #define MAX_UINT_FOR_SIZE(bits) (UINT64_MAX >> (64 - (bits)))
+ 
+ /**
+diff --git a/src/gallium/drivers/swr/rasterizer/common/os.cpp b/src/gallium/drivers/swr/rasterizer/common/os.cpp
+index aa817d4..cd04aed 100644
+--- a/src/gallium/drivers/swr/rasterizer/common/os.cpp
++++ b/src/gallium/drivers/swr/rasterizer/common/os.cpp
+@@ -106,7 +106,7 @@ void SWR_API SetCurrentThreadName(const char* pThreadName)
+     LegacySetThreadName(pThreadName);
+ #endif // _WIN32
+ 
+-#if defined(FORCE_LINUX) || defined(__linux__) || defined(__gnu_linux__)
++#if !defined(__UCLIBC__) && (defined(FORCE_LINUX) || defined(__linux__) || defined(__gnu_linux__))
+     pthread_setname_np(pthread_self(), pThreadName);
+ #endif // Linux
+ }
+diff --git a/src/util/os_time.c b/src/util/os_time.c
+index 92fc363..a271505 100644
+--- a/src/util/os_time.c
++++ b/src/util/os_time.c
+@@ -93,7 +93,7 @@ os_time_get_nano(void)
+ void
+ os_time_sleep(int64_t usecs)
+ {
+-#if DETECT_OS_LINUX
++#if DETECT_OS_LINUX && !defined(__UCLIBC__)
+    struct timespec time;
+    time.tv_sec = usecs / 1000000;
+    time.tv_nsec = (usecs % 1000000) * 1000;
+diff --git a/src/util/u_thread.h b/src/util/u_thread.h
+index 1f2a104..ded3921 100644
+--- a/src/util/u_thread.h
++++ b/src/util/u_thread.h
+@@ -72,7 +72,7 @@ static inline thrd_t u_thread_create(int (*routine)(void *), void *param)
+ 
+ static inline void u_thread_setname( const char *name )
+ {
+-#if defined(HAVE_PTHREAD)
++#if defined(HAVE_PTHREAD) && !defined(__UCLIBC__)
+ #if DETECT_OS_LINUX || DETECT_OS_CYGWIN || DETECT_OS_SOLARIS
+    pthread_setname_np(pthread_self(), name);
+ #elif DETECT_OS_FREEBSD || DETECT_OS_OPENBSD
+-- 
+2.20.1
+
