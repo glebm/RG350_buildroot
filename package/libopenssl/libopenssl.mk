@@ -57,7 +57,7 @@ define HOST_LIBOPENSSL_CONFIGURE_CMDS
 	(cd $(@D); \
 		$(HOST_CONFIGURE_OPTS) \
 		./config \
-		--prefix=$(HOST_DIR) \
+		--prefix=$(HOST_DIR)/usr \
 		--openssldir=$(HOST_DIR)/etc/ssl \
 		no-tests \
 		no-fuzz-libfuzzer \

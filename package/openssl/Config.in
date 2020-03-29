@@ -46,9 +46,6 @@ config BR2_PACKAGE_LIBRESSL
 
 source "package/libressl/Config.in"
 
-# openssl from br2-external trees, if any
-source "$BR2_BASE_DIR/.br2-external.in.openssl"
-
 endchoice
 
 config BR2_PACKAGE_HAS_OPENSSL
