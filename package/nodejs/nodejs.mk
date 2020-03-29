@@ -49,20 +49,20 @@ define HOST_NODEJS_CONFIGURE_CMDS
 	# The build system directly calls python. Work around this by forcing python2
 	# into PATH. See https://github.com/nodejs/node/issues/2735
 	mkdir -p $(@D)/bin
-	ln -sf $(HOST_DIR)/bin/python2 $(@D)/bin/python
+	ln -sf $(HOST_DIR)/usr/bin/python2 $(@D)/bin/python
 
 	(cd $(@D); \
 		$(HOST_CONFIGURE_OPTS) \
 		PATH=$(@D)/bin:$(BR_PATH) \
-		PYTHON=$(HOST_DIR)/bin/python2 \
-		$(HOST_DIR)/bin/python2 ./configure \
+		PYTHON=$(HOST_DIR)/usr/bin/python2 \
+		$(HOST_DIR)/usr/bin/python2 ./configure \
 		--prefix=$(HOST_DIR) \
 		--without-snapshot \
 		--without-dtrace \
 		--without-etw \
 		--shared-openssl \
 		--shared-openssl-includes=$(HOST_DIR)/include/openssl \
-		--shared-openssl-libpath=$(HOST_DIR)/lib \
+		--shared-openssl-libpath=$(HOST_DIR)/usr/lib \
 		--shared-zlib \
 		--no-cross-compiling \
 		--with-intl=small-icu \
@@ -77,7 +77,7 @@ NODEJS_HOST_TOOLS_NODE = mkcodecache
 NODEJS_HOST_TOOLS = $(NODEJS_HOST_TOOLS_V8) $(NODEJS_HOST_TOOLS_NODE)
 
 define HOST_NODEJS_BUILD_CMDS
-	$(HOST_MAKE_ENV) PYTHON=$(HOST_DIR)/bin/python2 \
+	$(HOST_MAKE_ENV) PYTHON=$(HOST_DIR)/usr/bin/python2 \
 		$(MAKE) -C $(@D) \
 		$(HOST_CONFIGURE_OPTS) \
 		LDFLAGS.host="$(HOST_LDFLAGS)" \
@@ -86,7 +86,7 @@ define HOST_NODEJS_BUILD_CMDS
 endef
 
 define HOST_NODEJS_INSTALL_CMDS
-	$(HOST_MAKE_ENV) PYTHON=$(HOST_DIR)/bin/python2 \
+	$(HOST_MAKE_ENV) PYTHON=$(HOST_DIR)/usr/bin/python2 \
 		$(MAKE) -C $(@D) install \
 		$(HOST_CONFIGURE_OPTS) \
 		LDFLAGS.host="$(HOST_LDFLAGS)" \
@@ -94,7 +94,7 @@ define HOST_NODEJS_INSTALL_CMDS
 		PATH=$(@D)/bin:$(BR_PATH)
 
 	$(foreach f,$(NODEJS_HOST_TOOLS), \
-		$(INSTALL) -m755 -D $(@D)/out/Release/$(f) $(HOST_DIR)/bin/$(f)
+		$(INSTALL) -m755 -D $(@D)/out/Release/$(f) $(HOST_DIR)/usr/bin/$(f)
 	)
 endef
 
@@ -147,15 +147,15 @@ endif
 
 define NODEJS_CONFIGURE_CMDS
 	mkdir -p $(@D)/bin
-	ln -sf $(HOST_DIR)/bin/python2 $(@D)/bin/python
+	ln -sf $(HOST_DIR)/usr/bin/python2 $(@D)/bin/python
 
 	(cd $(@D); \
 		$(TARGET_CONFIGURE_OPTS) \
 		PATH=$(@D)/bin:$(BR_PATH) \
 		LDFLAGS="$(NODEJS_LDFLAGS)" \
 		LD="$(TARGET_CXX)" \
-		PYTHON=$(HOST_DIR)/bin/python2 \
-		$(HOST_DIR)/bin/python2 ./configure \
+		PYTHON=$(HOST_DIR)/usr/bin/python2 \
+		$(HOST_DIR)/usr/bin/python2 ./configure \
 		--prefix=/usr \
 		--dest-cpu=$(NODEJS_CPU) \
 		$(if $(NODEJS_ARM_FP),--with-arm-float-abi=$(NODEJS_ARM_FP)) \
@@ -166,17 +166,17 @@ define NODEJS_CONFIGURE_CMDS
 	)
 
 	$(foreach f,$(NODEJS_HOST_TOOLS_V8), \
-		$(SED) "s#<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)$(f)<(EXECUTABLE_SUFFIX)#$(HOST_DIR)/bin/$(f)#" \
+		$(SED) "s#<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)$(f)<(EXECUTABLE_SUFFIX)#$(HOST_DIR)/usr/bin/$(f)#" \
 			$(@D)/tools/v8_gypfiles/v8.gyp
 	)
 	$(foreach f,$(NODEJS_HOST_TOOLS_NODE), \
-		$(SED) "s#<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)$(f)<(EXECUTABLE_SUFFIX)#$(HOST_DIR)/bin/$(f)#" \
+		$(SED) "s#<(PRODUCT_DIR)/<(EXECUTABLE_PREFIX)$(f)<(EXECUTABLE_SUFFIX)#$(HOST_DIR)/usr/bin/$(f)#" \
 			-i $(@D)/node.gyp
 	)
 endef
 
 define NODEJS_BUILD_CMDS
-	$(TARGET_MAKE_ENV) PYTHON=$(HOST_DIR)/bin/python2 \
+	$(TARGET_MAKE_ENV) PYTHON=$(HOST_DIR)/usr/bin/python2 \
 		$(MAKE) -C $(@D) \
 		$(TARGET_CONFIGURE_OPTS) \
 		NO_LOAD=cctest.target.mk \
@@ -201,7 +201,7 @@ NPM = $(TARGET_CONFIGURE_OPTS) \
 	npm_config_nodedir=$(BUILD_DIR)/nodejs-$(NODEJS_VERSION) \
 	npm_config_prefix=$(TARGET_DIR)/usr \
 	npm_config_cache=$(BUILD_DIR)/.npm-cache \
-	$(HOST_DIR)/bin/npm
+	$(HOST_DIR)/usr/bin/npm
 
 #
 # We can only call NPM if there's something to install.
@@ -216,7 +216,7 @@ endef
 endif
 
 define NODEJS_INSTALL_TARGET_CMDS
-	$(TARGET_MAKE_ENV) PYTHON=$(HOST_DIR)/bin/python2 \
+	$(TARGET_MAKE_ENV) PYTHON=$(HOST_DIR)/usr/bin/python2 \
 		$(MAKE) -C $(@D) install \
 		DESTDIR=$(TARGET_DIR) \
 		$(TARGET_CONFIGURE_OPTS) \
