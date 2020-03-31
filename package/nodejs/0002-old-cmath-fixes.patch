@@ -1,0 +1,96 @@
+From 976bc2fe928901da9909dfef4be07044adc2ae8c Mon Sep 17 00:00:00 2001
+From: Gleb Mazovetskiy <glex.spb@gmail.com>
+Date: Mon, 30 Mar 2020 03:52:03 +0100
+Subject: [PATCH] old cmath fixes
+
+---
+ deps/icu-small/source/i18n/decimfmt.cpp               | 2 +-
+ deps/icu-small/source/i18n/number_decimalquantity.cpp | 2 +-
+ deps/v8/src/compiler/machine-operator-reducer.cc      | 2 +-
+ deps/v8/src/compiler/node-matchers.h                  | 2 +-
+ deps/v8/src/wasm/wasm-external-refs.cc                | 2 +-
+ deps/v8/src/wasm/wasm-interpreter.cc                  | 2 +-
+ src/util-inl.h                                        | 2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/deps/icu-small/source/i18n/decimfmt.cpp b/deps/icu-small/source/i18n/decimfmt.cpp
+index 6a69c9d7..2af49bc5 100644
+--- a/deps/icu-small/source/i18n/decimfmt.cpp
++++ b/deps/icu-small/source/i18n/decimfmt.cpp
+@@ -1801,7 +1801,7 @@ bool DecimalFormat::fastFormatDouble(double input, UnicodeString& output) const
+         return false;
+     }
+     if (std::isnan(input)
+-            || std::trunc(input) != input
++            || trunc(input) != input
+             || input <= INT32_MIN
+             || input > INT32_MAX) {
+         return false;
+diff --git a/deps/icu-small/source/i18n/number_decimalquantity.cpp b/deps/icu-small/source/i18n/number_decimalquantity.cpp
+index 2c4c2ce7..23a609f6 100644
+--- a/deps/icu-small/source/i18n/number_decimalquantity.cpp
++++ b/deps/icu-small/source/i18n/number_decimalquantity.cpp
+@@ -452,7 +452,7 @@ void DecimalQuantity::_setToDoubleFast(double n) {
+         for (; i <= -22; i += 22) n /= 1e22;
+         n /= DOUBLE_MULTIPLIERS[-i];
+     }
+-    auto result = static_cast<int64_t>(std::round(n));
++    auto result = static_cast<int64_t>(round(n));
+     if (result != 0) {
+         _setToLong(result);
+         scale -= fracLength;
+diff --git a/deps/v8/src/compiler/machine-operator-reducer.cc b/deps/v8/src/compiler/machine-operator-reducer.cc
+index 38013d22..62526def 100644
+--- a/deps/v8/src/compiler/machine-operator-reducer.cc
++++ b/deps/v8/src/compiler/machine-operator-reducer.cc
+@@ -320,7 +320,7 @@ Reduction MachineOperatorReducer::Reduce(Node* node) {
+     case IrOpcode::kFloat32Sub: {
+       Float32BinopMatcher m(node);
+       if (allow_signalling_nan_ && m.right().Is(0) &&
+-          (std::copysign(1.0, m.right().Value()) > 0)) {
++          (copysign(1.0, m.right().Value()) > 0)) {
+         return Replace(m.left().node());  // x - 0 => x
+       }
+       if (m.right().IsNaN()) {  // x - NaN => NaN
+diff --git a/deps/v8/src/compiler/node-matchers.h b/deps/v8/src/compiler/node-matchers.h
+index 82bc1795..4d095af3 100644
+--- a/deps/v8/src/compiler/node-matchers.h
++++ b/deps/v8/src/compiler/node-matchers.h
+@@ -171,7 +171,7 @@ struct FloatMatcher final : public ValueMatcher<T, kOpcode> {
+     return this->HasValue() && std::isnormal(this->Value());
+   }
+   bool IsInteger() const {
+-    return this->HasValue() && std::nearbyint(this->Value()) == this->Value();
++    return this->HasValue() && nearbyint(this->Value()) == this->Value();
+   }
+   bool IsPositiveOrNegativePowerOf2() const {
+     if (!this->HasValue() || (this->Value() == 0.0)) {
+diff --git a/deps/v8/src/wasm/wasm-external-refs.cc b/deps/v8/src/wasm/wasm-external-refs.cc
+index 13c159c0..fb65df83 100644
+--- a/deps/v8/src/wasm/wasm-external-refs.cc
++++ b/deps/v8/src/wasm/wasm-external-refs.cc
+@@ -53,7 +53,7 @@ void f32_ceil_wrapper(Address data) {
+ }
+ 
+ void f32_nearest_int_wrapper(Address data) {
+-  WriteUnalignedValue<float>(data, nearbyintf(ReadUnalignedValue<float>(data)));
++  WriteUnalignedValue<float>(data, nearbyint(ReadUnalignedValue<float>(data)));
+ }
+ 
+ void f64_trunc_wrapper(Address data) {
+diff --git a/deps/v8/src/wasm/wasm-interpreter.cc b/deps/v8/src/wasm/wasm-interpreter.cc
+index 7c41f6a8..58f9d81c 100644
+--- a/deps/v8/src/wasm/wasm-interpreter.cc
++++ b/deps/v8/src/wasm/wasm-interpreter.cc
+@@ -423,7 +423,7 @@ inline float ExecuteF32Floor(float a, TrapReason* trap) { return floorf(a); }
+ inline float ExecuteF32Trunc(float a, TrapReason* trap) { return truncf(a); }
+ 
+ inline float ExecuteF32NearestInt(float a, TrapReason* trap) {
+-  return nearbyintf(a);
++  return nearbyint(a);
+ }
+ 
+ 
+ -- 
+2.20.1
+
