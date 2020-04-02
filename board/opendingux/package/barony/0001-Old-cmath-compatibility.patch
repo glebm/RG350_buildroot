@@ -1,0 +1,60 @@
+From ba303a97ca096a9dc7bbf32a44ed4e71f987058a Mon Sep 17 00:00:00 2001
+From: Gleb Mazovetskiy <glex.spb@gmail.com>
+Date: Wed, 1 Apr 2020 23:25:20 +0100
+Subject: [PATCH] Old cmath compatibility
+
+Old ucLibc doesn't have std::round
+---
+ src/draw.cpp                |  2 +-
+ src/interface/interface.cpp | 10 +++++-----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/src/draw.cpp b/src/draw.cpp
+index c23601a5..5d0193b6 100644
+--- a/src/draw.cpp
++++ b/src/draw.cpp
+@@ -653,7 +653,7 @@ void drawImageRing(SDL_Surface* image, SDL_Rect* src, int radius, int thickness,
+ 	double s;
+ 	real_t arcAngle = angStart;
+ 	int first = segments / 2;
+-	real_t distance = std::round((angEnd - angStart) * segments / (2 * PI));
++	real_t distance = round((angEnd - angStart) * segments / (2 * PI));
+ 	for ( int i = 0; i < first; ++i ) 
+ 	{
+ 		glBegin(GL_QUAD_STRIP);
+diff --git a/src/interface/interface.cpp b/src/interface/interface.cpp
+index f0ce04f7..71c44934 100644
+--- a/src/interface/interface.cpp
++++ b/src/interface/interface.cpp
+@@ -1970,8 +1970,8 @@ void FollowerRadialMenu::drawFollowerMenu()
+ 			drawLine(xres / 2 + (radius - thickness) * cos(angleEnd), yres / 2 - (radius - thickness) * sin(angleEnd),
+ 				xres / 2 + (radius + thickness - 1) * cos(angleEnd), yres / 2 - (radius + thickness - 1) * sin(angleEnd), uint32ColorGray(*mainsurface), 192);
+ 
+-			drawArcInvertedY(xres / 2, yres / 2, radius - thickness, std::round((angleStart * 180) / PI), ((angleEnd * 180) / PI), uint32ColorGray(*mainsurface), 192);
+-			drawArcInvertedY(xres / 2, yres / 2, (radius + thickness), std::round((angleStart * 180) / PI), ((angleEnd * 180) / PI) + 1, uint32ColorGray(*mainsurface), 192);
++			drawArcInvertedY(xres / 2, yres / 2, radius - thickness, round((angleStart * 180) / PI), ((angleEnd * 180) / PI), uint32ColorGray(*mainsurface), 192);
++			drawArcInvertedY(xres / 2, yres / 2, (radius + thickness), round((angleStart * 180) / PI), ((angleEnd * 180) / PI) + 1, uint32ColorGray(*mainsurface), 192);
+ 
+ 			angleStart += 2 * PI / numoptions;
+ 			angleMiddle = angleStart + PI / numoptions;
+@@ -2017,8 +2017,8 @@ void FollowerRadialMenu::drawFollowerMenu()
+ 						drawLine(xres / 2 + (radius - thickness) * cos(angleEnd), yres / 2 - (radius - thickness) * sin(angleEnd),
+ 							xres / 2 + (radius + thickness - 1) * cos(angleEnd), yres / 2 - (radius + thickness - 1) * sin(angleEnd), borderColor, 192);
+ 
+-						drawArcInvertedY(xres / 2, yres / 2, radius - thickness, std::round((angleStart * 180) / PI), ((angleEnd * 180) / PI), borderColor, 192);
+-						drawArcInvertedY(xres / 2, yres / 2, (radius + thickness), std::round((angleStart * 180) / PI), ((angleEnd * 180) / PI) + 1, borderColor, 192);
++						drawArcInvertedY(xres / 2, yres / 2, radius - thickness, round((angleStart * 180) / PI), ((angleEnd * 180) / PI), borderColor, 192);
++						drawArcInvertedY(xres / 2, yres / 2, (radius + thickness), round((angleStart * 180) / PI), ((angleEnd * 180) / PI) + 1, borderColor, 192);
+ 					}
+ 				}
+ 			}
+@@ -7913,4 +7913,4 @@ void EnemyHPDamageBarHandler::addEnemyToList(Sint32 HP, Sint32 maxHP, Sint32 old
+ 	{
+ 		HPBars.insert(std::make_pair(uid, EnemyHPDetails(HP, maxHP, oldHP, color, name, isLowPriority)));
+ 	}
+-}
+\ No newline at end of file
++}
+-- 
+2.20.1
+

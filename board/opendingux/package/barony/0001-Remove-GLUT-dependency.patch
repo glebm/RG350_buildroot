@@ -1,0 +1,136 @@
+From 650283c4d49dab7aeb12613a531213a3397fa0ce Mon Sep 17 00:00:00 2001
+From: Gleb Mazovetskiy <glex.spb@gmail.com>
+Date: Wed, 1 Apr 2020 22:18:16 +0100
+Subject: [PATCH] Remove GLUT dependency
+
+GLUT is deprecated and is no longer available on many platforms.
+---
+ CMakeLists.txt |  5 +----
+ src/main.hpp   |  2 --
+ src/opengl.cpp | 33 ++++++++++++++++++++++++++++-----
+ 3 files changed, 29 insertions(+), 11 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1a208fbb..0678297a 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -227,9 +227,6 @@ elseif (APPLE)
+     include_directories("${PROJECT_SOURCE_DIR}/libraries/fmod/inc")
+     link_directories("${PROJECT_SOURCE_DIR}/libraries/fmod/lib")
+   endif()
+-
+-  find_package(GLUT REQUIRED)
+-  include_directories(${GLUT_INCLUDE_DIR})
+ endif()
+ 
+ # Add the source directory
+@@ -318,7 +315,7 @@ else()
+     #target_link_libraries(barony ${STEAMWORKS_CWRAPPER_LIBRARIES} -lstdc++)
+   endif()
+   if (APPLE)
+-    target_link_libraries(barony ${GLUT_LIBRARIES} ${PROJECT_SOURCE_DIR}/libpng16.16.dylib)
++    target_link_libraries(barony ${PROJECT_SOURCE_DIR}/libpng16.16.dylib)
+   endif()
+   if (${CMAKE_SYSTEM_NAME} MATCHES "BSD")
+     # For backtrace
+diff --git a/src/main.hpp b/src/main.hpp
+index 2b53d52e..5164c529 100644
+--- a/src/main.hpp
++++ b/src/main.hpp
+@@ -65,14 +65,12 @@ extern bool autoLimbReload;
+ #include <Cocoa/Cocoa.h>
+ //#include <OpenGL/OpenGL.h>
+ #define GL_GLEXT_PROTOTYPES
+-#include <GLUT/glut.h>
+ #include <OpenGL/gl3ext.h>
+ #include <OpenGL/gl3.h>
+ #include <SDL2/SDL_opengl.h>
+ #else
+ #define GL_GLEXT_PROTOTYPES
+ #include <GL/gl.h>
+-#include <GL/glu.h>
+ #include <GL/glext.h>
+ #include "SDL_opengl.h"
+ #endif
+diff --git a/src/opengl.cpp b/src/opengl.cpp
+index d3b63059..ac37c69f 100644
+--- a/src/opengl.cpp
++++ b/src/opengl.cpp
+@@ -26,6 +26,29 @@ PFNGLENABLEVERTEXATTRIBARRAYPROC SDL_glEnableVertexAttribArray;
+ PFNGLVERTEXATTRIBPOINTERPROC SDL_glVertexAttribPointer;
+ #endif
+ 
++namespace {
++
++// Sets the frustum to perspective mode.
++// fovY     - Field of vision in degrees in the y direction
++// aspect   - Aspect ratio of the viewport
++// zNear    - The near clipping distance
++// zFar     - The far clipping distance
++//
++// See http://nehe.gamedev.net/article/replacement_for_perspectiveGL/21002/
++void perspectiveGL(GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar)
++{
++    const GLdouble pi = 3.1415926535897932384626433832795;
++    GLdouble fW, fH;
++
++    //fH = tan( (fovY / 2) / 180 * pi ) * zNear;
++    fH = tan( fovY / 360 * pi ) * zNear;
++    fW = fH * aspect;
++
++    glFrustum( -fW, fW, -fH, fH, zNear, zFar );
++}
++
++} // namespace
++
+ /*-------------------------------------------------------------------------------
+ 
+ 	getLightForEntity
+@@ -109,7 +132,7 @@ void glDrawVoxel(view_t* camera, Entity* entity, int mode)
+ 	glMatrixMode( GL_PROJECTION );
+ 	glLoadIdentity();
+ 	glViewport(camera->winx, yres - camera->winh - camera->winy, camera->winw, camera->winh);
+-	gluPerspective(fov, (real_t)camera->winw / (real_t)camera->winh, CLIPNEAR, CLIPFAR * 2);
++	perspectiveGL(fov, (real_t)camera->winw / (real_t)camera->winh, CLIPNEAR, CLIPFAR * 2);
+ 	glEnable( GL_DEPTH_TEST );
+ 	if ( !entity->flags[OVERDRAW] )
+ 	{
+@@ -451,7 +474,7 @@ void glDrawSprite(view_t* camera, Entity* entity, int mode)
+ 	glMatrixMode( GL_PROJECTION );
+ 	glLoadIdentity();
+ 	glViewport(camera->winx, yres - camera->winh - camera->winy, camera->winw, camera->winh);
+-	gluPerspective(fov, (real_t)camera->winw / (real_t)camera->winh, CLIPNEAR, CLIPFAR * 2);
++	perspectiveGL(fov, (real_t)camera->winw / (real_t)camera->winh, CLIPNEAR, CLIPFAR * 2);
+ 	glEnable( GL_DEPTH_TEST );
+ 	if (!entity->flags[OVERDRAW])
+ 	{
+@@ -636,7 +659,7 @@ void glDrawSpriteFromImage(view_t* camera, Entity* entity, std::string text, int
+ 	glMatrixMode(GL_PROJECTION);
+ 	glLoadIdentity();
+ 	glViewport(camera->winx, yres - camera->winh - camera->winy, camera->winw, camera->winh);
+-	gluPerspective(fov, (real_t)camera->winw / (real_t)camera->winh, CLIPNEAR, CLIPFAR * 2);
++	perspectiveGL(fov, (real_t)camera->winw / (real_t)camera->winh, CLIPNEAR, CLIPFAR * 2);
+ 	glEnable(GL_DEPTH_TEST);
+ 	if ( !entity->flags[OVERDRAW] )
+ 	{
+@@ -844,7 +867,7 @@ void glDrawWorld(view_t* camera, int mode)
+ 		glMatrixMode( GL_PROJECTION );
+ 		glLoadIdentity();
+ 		glViewport(camera->winx, yres - camera->winh - camera->winy, camera->winw, camera->winh);
+-		gluPerspective(fov, (real_t)camera->winw / (real_t)camera->winh, CLIPNEAR, CLIPFAR * 16);
++		perspectiveGL(fov, (real_t)camera->winw / (real_t)camera->winh, CLIPNEAR, CLIPFAR * 16);
+ 		GLfloat rotx = camera->vang * 180 / PI; // get x rotation
+ 		GLfloat roty = (camera->ang - 3 * PI / 2) * 180 / PI; // get y rotation
+ 		GLfloat rotz = 0; // get z rotation
+@@ -896,7 +919,7 @@ void glDrawWorld(view_t* camera, int mode)
+ 	glMatrixMode( GL_PROJECTION );
+ 	glLoadIdentity();
+ 	glViewport(camera->winx, yres - camera->winh - camera->winy, camera->winw, camera->winh);
+-	gluPerspective(fov, (real_t)camera->winw / (real_t)camera->winh, CLIPNEAR, CLIPFAR * 2);
++	perspectiveGL(fov, (real_t)camera->winw / (real_t)camera->winh, CLIPNEAR, CLIPFAR * 2);
+ 	GLfloat rotx = camera->vang * 180 / PI; // get x rotation
+ 	GLfloat roty = (camera->ang - 3 * PI / 2) * 180 / PI; // get y rotation
+ 	GLfloat rotz = 0; // get z rotation
+-- 
+2.20.1
+

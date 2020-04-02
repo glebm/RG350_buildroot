@@ -1,0 +1,44 @@
+From 5be10ff922e7479cbd8db73028ac83abd1e526b6 Mon Sep 17 00:00:00 2001
+From: Gleb Mazovetskiy <glex.spb@gmail.com>
+Date: Wed, 1 Apr 2020 23:29:21 +0100
+Subject: [PATCH] Remove <execinfo.h>
+
+This header isn't present when using ucLibc compiled without backtrace
+support
+---
+ src/game.cpp | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/src/game.cpp b/src/game.cpp
+index a524558a..3a9aea28 100644
+--- a/src/game.cpp
++++ b/src/game.cpp
+@@ -42,7 +42,6 @@
+ //Sigsegv catching stuff.
+ #include <signal.h>
+ #include <string.h>
+-#include <execinfo.h>
+ #include <sys/stat.h>
+ 
+ const unsigned STACK_SIZE = 10;
+@@ -53,17 +52,6 @@ void segfault_sigaction(int signal, siginfo_t* si, void* arg)
+ 
+ 	printlog("Caught segfault at address %p\n", si->si_addr);
+ 
+-	//Dump the stack.
+-	void* array[STACK_SIZE];
+-	size_t size;
+-
+-	size = backtrace(array, STACK_SIZE);
+-
+-	printlog("Signal %d (dumping stack):\n", signal);
+-	backtrace_symbols_fd(array, size, STDERR_FILENO);
+-
+-	SDL_SetRelativeMouseMode(SDL_FALSE); //Uncapture mouse.
+-
+ 	exit(0);
+ }
+ 
+-- 
+2.20.1
+

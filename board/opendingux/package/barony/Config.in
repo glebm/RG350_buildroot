@@ -1,0 +1,13 @@
+config BR2_PACKAGE_BARONY
+	bool "barony"
+	select BR2_PACKAGE_SDL2
+	select BR2_PACKAGE_SDL2_IMAGE
+	select BR2_PACKAGE_SDL2_MIXER
+	select BR2_PACKAGE_SDL2_TTF
+	select BR2_PACKAGE_TREMOR
+	select BR2_PACKAGE_LIBPNG
+	select BR2_PACKAGE_PHYSFS
+	help
+	  Barony is a 3D, first-person roguelike.
+	
+	  http://www.baronygame.com/
