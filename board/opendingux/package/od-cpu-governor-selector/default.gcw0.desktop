@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=CPU mode
+Comment=Configure CPU governor
+Exec=od-cpu-governor-selector.sh
+Terminal=true
+Type=Application
+StartupNotify=true
+Icon=icon
+Categories=settings;

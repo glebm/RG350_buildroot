@@ -1,0 +1,6 @@
+title=CPU mode
+description=Configure CPU governor
+exec=/usr/bin/od-cpu-governor-selector
+icon=skin:icons/od-cpu-governor-selector.png
+consoleapp=true
+editable=false

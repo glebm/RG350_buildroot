@@ -23,6 +23,7 @@ comment "Libraries"
 
 comment "System tools"
 	source "$BR2_EXTERNAL/package/dingux-commander/Config.in"
+	source "$BR2_EXTERNAL/package/od-cpu-governor-selector/Config.in"
 	source "$BR2_EXTERNAL/package/od-network-config/Config.in"
 	source "$BR2_EXTERNAL/package/pwswd/Config.in"
 endmenu

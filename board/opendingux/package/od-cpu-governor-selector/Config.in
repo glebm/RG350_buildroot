@@ -1,0 +1,12 @@
+config BR2_PACKAGE_OD_CPU_GOVERNOR_SELECTOR
+	bool "od-cpu-governor-selector"
+	help
+	  UI for selecting the CPU governor.
+
+
+if BR2_PACKAGE_OD_CPU_GOVERNOR_SELECTOR
+
+config BR2_PACKAGE_OD_CPU_GOVERNOR_SELECTOR_SYSTEM_APP
+	bool "Install as a system app instead of an OPK"
+
+endif
